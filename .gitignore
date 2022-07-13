@@ -1,0 +1,7 @@
+.vscode
+.docstring
+build/*
+dist/*
+data/*
+__pycache__
+*.egg-info
