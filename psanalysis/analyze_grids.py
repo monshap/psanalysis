@@ -1,5 +1,87 @@
+import os
+
 import numpy as np
 
+
+class PlanarStudy(object):
+
+    def __init__(self, dir, t_pts, name=None):
+        self.dir = dir
+        self.t_pts = t_pts
+        self.wlmask = np.loadtxt(os.path.join(self.dir, "WLMask.txt"),
+                                 dtype="bool")
+        self.ant_dir = os.path.join(self.dir, "AntScans")
+        self.post_dir = os.path.join(self.dir, "TcScans")
+        self.ant_bg_dir = os.path.join(self.dir, "AntBgScans")
+        self.post_bg_dir = os.path.join(self.dir, "BgScans")
+
+    def preprocess_scans(self):
+
+        def _clip_scan(scan, py0, px0):
+            py, px = np.shape(scan)
+            if py > py0:
+                dy = py - py0
+                scan = scan[dy:, :]
+                py = int(py0)
+            if px > px0:
+                dx = px - px0
+                scan = scan[:, dx:]
+                px = int(px0)
+            return scan, py, px
+
+        nt = len(self.t_pts)
+        py0, px0 = np.shape(self.wlmask)
+
+        # Process anterior scans
+        ant_act = np.zeros((py0, px0, 3*nt))
+        # Anterior indices for each energy window [Tc, Mid, In]
+        ant_idx = [*range(1, nt+1), *range(2*nt+1, 3*nt+1),
+                   *range(4*nt+1, 5*nt+1)]
+        for i, idx in enumerate(ant_idx):
+            fname = os.path.join(self.ant_dir, f"Tc_{idx}.txt")
+            scan, py, px = _clip_scan(np.loadtxt(fname), py0, px0)
+            ant_act[:py, :px, i] = scan
+            ant_act[..., i] = ant_act[..., i]*self.wlmask
+        # Anterior background Tc-99m activity
+        ant_bgTc = np.zeros((py0, px0))
+        ant_bgTc_path = os.path.join(self.ant_bg_dir, "Bg_1.txt")
+        scan, py, px = _clip_scan(np.loadtxt(ant_bgTc_path), py0, px0)
+        ant_bgTc[:py, :px] = scan
+        ant_bgTc = ant_bgTc*self.wlmask
+        # Anterior background In-111 activity
+        ant_bgIn = np.zeros((py0, px0))
+        ant_bgIn_path = os.path.join(self.ant_bg_dir, "Bg_5.txt")
+        scan, py, px = _clip_scan(np.loadtxt(ant_bgIn_path), py0, px0)
+        ant_bgIn[:py, :px] = scan
+        ant_bgIn = ant_bgIn*self.wlmask
+
+        # Process posterior scans
+        post_act = np.zeros((py0, px0, 3*nt))
+        # Posterior indices for each energy window [Tc, Mid, In]
+        post_idx = [*range(nt+1, 2*nt+1), *range(3*nt+1, 4*nt+1),
+                    *range(5*nt+1, 6*nt+1)]
+        for i, idx in enumerate(post_idx):
+            fname = os.path.join(self.post_dir, f"Tc_{idx}.txt")
+            scan, py, px = _clip_scan(np.loadtxt(fname), py0, px0)
+            post_act[:py, px:, i] = scan
+            post_act[..., i] = post_act[..., i]*self.wlmask
+        # Posterior background Tc-99m activity
+        post_bgTc = np.zeros((py0, px0))
+        post_bgTc_path = os.path.join(self.post_bg_dir, "Bg_2.txt")
+        scan, py, px = _clip_scan(np.loadtxt(post_bgTc_path), py0, px0)
+        post_bgTc[:py, :px] = scan
+        post_bgTc = post_bgTc*self.wlmask
+        # Posterior background In-111 activity
+        post_bgIn = np.zeros((py0, px0))
+        post_bgIn_path = os.path.join(self.post_bg_dir, "Bg_6.txt")
+        scan, py, px = _clip_scan(np.loadtxt(post_bgIn_path), py0, px0)
+        post_bgIn[:py, :px] = scan
+        post_bgIn = post_bgIn*self.wlmask
+
+        # TODO: Figure out if I need to decay correct or not
+        # TODO: Subtract off background activity
+
+        return ant_act, post_act
 
 def pixel2grid(img, ny, nx):
     # size of original image (could be more than 2 dim)
