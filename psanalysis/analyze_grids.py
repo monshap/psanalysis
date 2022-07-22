@@ -97,6 +97,12 @@ class PlanarStudy(object):
 
         # TODO: Figure out if I need to decay correct or not
 
+        # Assign attributes to activity matrices
+        self.ant_Tc = ant_Tc
+        self.ant_In = ant_In
+        self.post_Tc = post_Tc
+        self.post_In = post_In
+
         return ant_Tc, ant_In, post_Tc, post_In
 
 def pixel2grid(img, ny, nx):
