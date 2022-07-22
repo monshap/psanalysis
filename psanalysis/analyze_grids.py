@@ -29,6 +29,17 @@ class PlanarStudy(object):
                 px = int(px0)
             return scan, py, px
 
+        def bgcorrect_tc(act, bg, nt):
+            tc_raw = act[..., :nt]
+            mid_raw = act[..., nt:2*nt]
+            tc_correct = tc_raw/2 - mid_raw*2.01/2 - bg[..., np.newaxis]/4
+            return tc_correct
+
+        def bgcorrect_in(act, bg, nt):
+            in_raw = act[..., 2*nt:]
+            in_correct = tc_raw/2 - bg[..., np.newaxis]/4
+            return in_correct
+
         nt = len(self.t_pts)
         py0, px0 = np.shape(self.wlmask)
 
@@ -78,10 +89,15 @@ class PlanarStudy(object):
         post_bgIn[:py, :px] = scan
         post_bgIn = post_bgIn*self.wlmask
 
-        # TODO: Figure out if I need to decay correct or not
-        # TODO: Subtract off background activity
+        # Background correct anterior & posterior images
+        ant_Tc = bgcorrect_tc(ant_act, ant_bgTc, nt)
+        ant_In = bgcorrect_in(ant_act, ant_bgIn, nt)
+        post_Tc = bgcorrect_tc(post_act, post_bgTc, nt)
+        post_In = bgcorrect_in(post_act, post_bgIn, nt)
 
-        return ant_act, post_act
+        # TODO: Figure out if I need to decay correct or not
+
+        return ant_Tc, ant_In, post_Tc, post_In
 
 def pixel2grid(img, ny, nx):
     # size of original image (could be more than 2 dim)
