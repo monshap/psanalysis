@@ -80,7 +80,7 @@ class PlanarStudy(object):
 
         def bgcorrect_in(act, bg, nt):
             in_raw = act[..., 2*nt:]
-            in_correct = tc_raw/2 - bg[..., np.newaxis]/4
+            in_correct = in_raw/2 - bg[..., np.newaxis]/4
             return in_correct
 
         nt = len(self.t_pts)
