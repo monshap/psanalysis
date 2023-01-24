@@ -15,8 +15,10 @@ def pixel2grid(img, ny, nx):
     binned = np.zeros(fdims)
     x_lin = np.linspace(0, w, nx+1)
     y_lin = np.linspace(0, h, ny+1)
-    x_flr = np.floor(x_lin)
-    y_flr = np.floor(y_lin)
+    xfs = np.floor(x_lin)
+    x_flr = [int(xf) for xf in xfs]
+    yfs = np.floor(y_lin)
+    y_flr = [int(yf) for yf in yfs]
     area = x_lin[1] * y_lin[1]
     for i in range(ny):
         for j in range(nx):
