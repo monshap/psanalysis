@@ -91,23 +91,24 @@ class PlanarStudy(object):
         # Anterior indices for each energy window [Tc, Mid, In]
         ant_idx = [*range(1, nt+1), *range(2*nt+1, 3*nt+1),
                    *range(4*nt+1, 5*nt+1)]
-        if debug:
-            print("Scan numbers:", *ant_idx, sep=" ,")
         for i, idx in enumerate(ant_idx):
             fname = os.path.join(self.ant_dir, f"Tc_{idx}.txt")
-            scan, py, px = _clip_scan(np.loadtxt(fname), py0, px0)
+            scan, py, px = _clip_scan(np.loadtxt(fname), py0, px0,
+                                      debug=debug)
             ant_act[:py, :px, i] = scan
             ant_act[..., i] = ant_act[..., i]*self.wlmask
         # Anterior background Tc-99m activity
         ant_bgTc = np.zeros((py0, px0))
         ant_bgTc_path = os.path.join(self.ant_bg_dir, "Bg_1.txt")
-        scan, py, px = _clip_scan(np.loadtxt(ant_bgTc_path), py0, px0)
+        scan, py, px = _clip_scan(np.loadtxt(ant_bgTc_path), py0, px0,
+                                  debug=debug)
         ant_bgTc[:py, :px] = scan
         ant_bgTc = ant_bgTc*self.wlmask
         # Anterior background In-111 activity
         ant_bgIn = np.zeros((py0, px0))
         ant_bgIn_path = os.path.join(self.ant_bg_dir, "Bg_5.txt")
-        scan, py, px = _clip_scan(np.loadtxt(ant_bgIn_path), py0, px0)
+        scan, py, px = _clip_scan(np.loadtxt(ant_bgIn_path), py0, px0,
+                                  debug=debug)
         ant_bgIn[:py, :px] = scan
         ant_bgIn = ant_bgIn*self.wlmask
 
@@ -120,19 +121,22 @@ class PlanarStudy(object):
             print("Scan numbers:", *post_idx, sep=" ,")
         for i, idx in enumerate(post_idx):
             fname = os.path.join(self.post_dir, f"Tc_{idx}.txt")
-            scan, py, px = _clip_scan(np.loadtxt(fname), py0, px0)
+            scan, py, px = _clip_scan(np.loadtxt(fname), py0, px0,
+                                      debug=debug)
             post_act[:py, px:, i] = scan
             post_act[..., i] = post_act[..., i]*self.wlmask
         # Posterior background Tc-99m activity
         post_bgTc = np.zeros((py0, px0))
         post_bgTc_path = os.path.join(self.post_bg_dir, "Bg_2.txt")
-        scan, py, px = _clip_scan(np.loadtxt(post_bgTc_path), py0, px0)
+        scan, py, px = _clip_scan(np.loadtxt(post_bgTc_path), py0, px0,
+                                  debug=debug)
         post_bgTc[:py, :px] = scan
         post_bgTc = post_bgTc*self.wlmask
         # Posterior background In-111 activity
         post_bgIn = np.zeros((py0, px0))
         post_bgIn_path = os.path.join(self.post_bg_dir, "Bg_6.txt")
-        scan, py, px = _clip_scan(np.loadtxt(post_bgIn_path), py0, px0)
+        scan, py, px = _clip_scan(np.loadtxt(post_bgIn_path), py0, px0,
+                                  debug=debug)
         post_bgIn[:py, :px] = scan
         post_bgIn = post_bgIn*self.wlmask
 
