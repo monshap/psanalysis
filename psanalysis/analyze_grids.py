@@ -85,6 +85,8 @@ class PlanarStudy(object):
 
         nt = len(self.t_pts)
         py0, px0 = np.shape(self.wlmask)
+        if debug:
+            print(f"WLMask Shape: ({py0}, {px0})")
 
         # Process anterior scans
         ant_act = np.zeros((py0, px0, 3*nt))
@@ -117,13 +119,11 @@ class PlanarStudy(object):
         # Posterior indices for each energy window [Tc, Mid, In]
         post_idx = [*range(nt+1, 2*nt+1), *range(3*nt+1, 4*nt+1),
                     *range(5*nt+1, 6*nt+1)]
-        if debug:
-            print("Scan numbers:", *post_idx, sep=" ,")
         for i, idx in enumerate(post_idx):
             fname = os.path.join(self.post_dir, f"Tc_{idx}.txt")
             scan, py, px = _clip_scan(np.loadtxt(fname), py0, px0,
                                       debug=debug)
-            post_act[:py, px:, i] = scan
+            post_act[:py, :px, i] = scan
             post_act[..., i] = post_act[..., i]*self.wlmask
         # Posterior background Tc-99m activity
         post_bgTc = np.zeros((py0, px0))
