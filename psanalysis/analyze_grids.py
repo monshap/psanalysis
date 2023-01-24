@@ -56,9 +56,9 @@ class PlanarStudy(object):
         self.ant_bg_dir = os.path.join(self.dir, "AntBgScans")
         self.post_bg_dir = os.path.join(self.dir, "BgScans")
 
-    def preprocess_scans(self):
+    def preprocess_scans(self, debug=False):
 
-        def _clip_scan(scan, py0, px0):
+        def _clip_scan(scan, py0, px0, debug=False):
             py, px = np.shape(scan)
             if py > py0:
                 dy = py - py0
@@ -68,6 +68,8 @@ class PlanarStudy(object):
                 dx = px - px0
                 scan = scan[:, dx:]
                 px = int(px0)
+            if debug:
+                print(f"Current (py, px): ({py}, {px})")
             return scan, py, px
 
         def bgcorrect_tc(act, bg, nt):
@@ -89,6 +91,8 @@ class PlanarStudy(object):
         # Anterior indices for each energy window [Tc, Mid, In]
         ant_idx = [*range(1, nt+1), *range(2*nt+1, 3*nt+1),
                    *range(4*nt+1, 5*nt+1)]
+        if debug:
+            print("Scan numbers:", *ant_idx, sep=" ,")
         for i, idx in enumerate(ant_idx):
             fname = os.path.join(self.ant_dir, f"Tc_{idx}.txt")
             scan, py, px = _clip_scan(np.loadtxt(fname), py0, px0)
@@ -112,6 +116,8 @@ class PlanarStudy(object):
         # Posterior indices for each energy window [Tc, Mid, In]
         post_idx = [*range(nt+1, 2*nt+1), *range(3*nt+1, 4*nt+1),
                     *range(5*nt+1, 6*nt+1)]
+        if debug:
+            print("Scan numbers:", *post_idx, sep=" ,")
         for i, idx in enumerate(post_idx):
             fname = os.path.join(self.post_dir, f"Tc_{idx}.txt")
             scan, py, px = _clip_scan(np.loadtxt(fname), py0, px0)
