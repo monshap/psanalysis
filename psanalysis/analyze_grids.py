@@ -3,6 +3,16 @@ import os
 import numpy as np
 
 
+def bin_stats(grid):
+    # calculate first three moments of pixels in grid
+    from scipy.stats import skew
+
+    bin_mean = np.mean(grid, axis=(0, 1))
+    bin_var = np.var(grid, axis=(0, 1))
+    bin_skew = skew(grid, axis=(0, 1))
+    return bin_mean, bin_var, bin_skew
+
+
 def pixel2grid(img, ny, nx):
     # size of original image (could be more than 2 dim)
     sz = np.shape(img)
