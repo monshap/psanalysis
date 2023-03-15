@@ -13,7 +13,7 @@ def bin_stats(grid):
     return bin_mean, bin_var, bin_skew
 
 
-def pixel2grid(img, ny, nx):
+def pixel2grid(img, ny, nx, keeppixels=False):
     # size of original image (could be more than 2 dim)
     sz = np.shape(img)
     h, w = sz[0:2]
@@ -30,6 +30,13 @@ def pixel2grid(img, ny, nx):
     yfs = np.floor(y_lin)
     y_flr = [int(yf) for yf in yfs]
     area = x_lin[1] * y_lin[1]
+    # dimensions of individual bin
+    Bdim = np.copy(fdims)
+    By = y_flr[1] - y_flr[0] + 1
+    Bx = x_flr[1] - x_flr[0] + 1
+    Bdims[0:2] = [By, Bx]
+    # inverse lookup
+    grid2pixels = np.zeros((ny, nx, *Bdims))
     for i in range(ny):
         for j in range(nx):
             [x0, x1] = x_flr[j:j+2]
@@ -55,9 +62,11 @@ def pixel2grid(img, ny, nx):
                 x1 -= 1
             # activity from all whole & partial pixels in grid
             B = img[y0:y1+1, x0:x1+1, ...] * A
+            if keeppixels:
+                grid2pixels[i, j, ...] = B
             # add together all activity in grid
             binned[i, j, ...] = np.sum(B, axis=(0, 1))
-    return binned, area
+    return binned, area, grid2pixels
 
 
 class PlanarStudy(object):
@@ -162,8 +171,6 @@ class PlanarStudy(object):
         post_Tc = bgcorrect_tc(post_act, post_bgTc, nt)
         post_In = bgcorrect_in(post_act, post_bgIn, nt)
 
-        # TODO: Figure out if I need to decay correct or not
-
         # Assign attributes to activity matrices
         self.ant_Tc = ant_Tc
         self.ant_In = ant_In
@@ -172,16 +179,24 @@ class PlanarStudy(object):
 
         return ant_Tc, ant_In, post_Tc, post_In
 
-    def gridify(self, ny, nx):
+    def gridify(self, ny, nx, keeppixels=False):
         emsg = "ERROR: No images loaded. Run preprocess_scans() first"
         assert hasattr(self, "ant_Tc"), emsg
         assert hasattr(self, "ant_In"), emsg
         assert hasattr(self, "post_Tc"), emsg
         assert hasattr(self, "post_In"), emsg
 
-        grid_ant_Tc, area = pixel2grid(self.ant_Tc, ny, nx)
-        grid_ant_In, _ = pixel2grid(self.ant_In, ny, nx)
-        grid_post_Tc, _ = pixel2grid(self.post_Tc, ny, nx)
-        grid_post_In, _ = pixel2grid(self.post_In, ny, nx)
+        grid_ant_Tc, area, g2p_ant_Tc = pixel2grid(self.ant_Tc, ny, nx,
+                                                   keeppixels=keeppixels)
+        grid_ant_In, _, g2p_ant_In = pixel2grid(self.ant_In, ny, nx,
+                                                keeppixels=keeppixels)
+        grid_post_Tc, _, g2p_post_Tc = pixel2grid(self.post_Tc, ny, nx,
+                                                  keeppixels=keeppixels)
+        grid_post_In, _, g2p_post_In = pixel2grid(self.post_In, ny, nx,
+                                                  keeppixels=keeppixels)
 
-        return (area, grid_ant_Tc, grid_ant_In, grid_post_Tc, grid_post_In)
+        if keeppixels:
+            return (area, grid_ant_Tc, grid_ant_In, grid_post_Tc, grid_post_In,
+                    g2p_ant_Tc, g2p_ant_In, g2p_post_Tc, g2p_post_In)
+        else:
+            return (area, grid_ant_Tc, grid_ant_In, grid_post_Tc, grid_post_In)
