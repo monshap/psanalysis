@@ -36,6 +36,8 @@ def pixel2grid(img, ny, nx):
             [y0, y1] = y_flr[i:i+2]
             [lx0, lx1] = x_lin[j:j+2]
             [ly0, ly1] = y_lin[i:i+2]
+            # create mask defining contribution from each pixel (activity
+            # from pixels on bin edge is split proportionally to area)
             Ay = y1 - y0 + 1
             Ax = x1 - x0 + 1
             Adims = np.copy(fdims)
@@ -51,7 +53,9 @@ def pixel2grid(img, ny, nx):
             if j == nx-1:
                 A = A[:, 0:-1, ...]
                 x1 -= 1
+            # activity from all whole & partial pixels in grid
             B = img[y0:y1+1, x0:x1+1, ...] * A
+            # add together all activity in grid
             binned[i, j, ...] = np.sum(B, axis=(0, 1))
     return binned, area
 
