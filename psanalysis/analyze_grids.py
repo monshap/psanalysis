@@ -30,13 +30,15 @@ def pixel2grid(img, ny, nx, keeppixels=False):
     yfs = np.floor(y_lin)
     y_flr = [int(yf) for yf in yfs]
     area = x_lin[1] * y_lin[1]
+    y_max = np.max(yfs[1:] - yfs[:-1] + 1)
+    x_max = np.max(xfs[1:] - xfs[:-1] + 1)
     # dimensions of individual bin
-    Bdim = np.copy(fdims)
-    By = y_flr[1] - y_flr[0] + 1
-    Bx = x_flr[1] - x_flr[0] + 1
+    Bdims = np.copy(fdims)
+    By = int(y_max)
+    Bx = int(x_max)
     Bdims[0:2] = [By, Bx]
     # inverse lookup
-    grid2pixels = np.zeros((ny, nx, *Bdims))
+    grid2pixels = np.full((ny, nx, *Bdims), np.nan)
     for i in range(ny):
         for j in range(nx):
             [x0, x1] = x_flr[j:j+2]
@@ -63,7 +65,7 @@ def pixel2grid(img, ny, nx, keeppixels=False):
             # activity from all whole & partial pixels in grid
             B = img[y0:y1+1, x0:x1+1, ...] * A
             if keeppixels:
-                grid2pixels[i, j, ...] = B
+                grid2pixels[i, j, :(y1 - y0 + 1), :(x1 - x0 + 1), ...] = B
             # add together all activity in grid
             binned[i, j, ...] = np.sum(B, axis=(0, 1))
     return binned, area, grid2pixels
