@@ -139,7 +139,7 @@ class GridModel(pe.ConcreteModel):
     ts = list(range(0, 80, 2))
     ts8 = list(range(8, 80, 2))
 
-    def __init__(self, el, clust, fixlow, cdata, eq, wmat=None):
+    def __init__(self, el, clust, cdata, eq, wmat=None):
         """Define Concrete PYOMO Model for model & data specified
 
         Parameters:
@@ -147,8 +147,6 @@ class GridModel(pe.ConcreteModel):
         clust (ndarray): ND array defining which cluster each grid belongs to.
             To fit a parameter for each grid, specify unique cluster values for
             each grid in lung
-        fixlow (ndarray): ND boolean array defining grids to fix the clearance
-            rate parameter for
         cdata (ndarray): Concentration data of shape (ny, nx, nt)
         eq (ndarray): ND boolean array defining where to allow flow at equal
             elevation. 1=can flow to equal elevations, 0=can only flow downhill
@@ -161,8 +159,6 @@ class GridModel(pe.ConcreteModel):
         Instance of class GridModel
 
         Methods:
-        solve_grids: Use to solve for ideal solution for each grid (see paper
-            for details). Must be done *prior* to fitting overall objective.
         solve_overall_sse: Minimize overall objective function
         solve_cluster_sse: Minimize objective within an individual cluster,
             neglecting error in other clusters
@@ -173,8 +169,6 @@ class GridModel(pe.ConcreteModel):
         self.ngrid = self.ny*self.nx
         self.clust = clust
         self.nK = np.max(self.clust)
-        self.fixlow = fixlow
-        self.nfix = np.sum(self.fixlow > 0)
         self.out_lung = el == 0
         self.bool_map = get_bool_maps(el, eq=eq)
         self.sum_leave = np.clip(np.sum(self.bool_map, axis=0), 1, 8)
@@ -197,11 +191,6 @@ class GridModel(pe.ConcreteModel):
         self.k = pe.Var(self.K, initialize=1.0, bounds=(1e-3, 1e3))
         self.k[self.nK] = 1e-2
         self.k[self.nK].fix()
-        fixclust = self.clust[self.fixlow > 0]
-        fixmed = self.fixlow[self.fixlow > 0]
-        for i in range(self.nfix):
-            self.k[fixclust[i]] = fixmed[i]
-            self.k[fixclust[i]].fix()
         # states
         self.C = pe.Var(self.t, self.i, self.j, within=pe.NonNegativeReals)
         # derivatives
@@ -276,7 +265,7 @@ class GridModel(pe.ConcreteModel):
                 i, j = gid
                 sse_ij = sum([(m.C[self.ts[t], i, j] - self.cdata[i, j, t])**2
                               for t in range(4, 40)])
-                sse += self.wmat[i,j] * (sse_ij - self.best_sse[i, j])
+                sse += self.wmat[i,j] * sse_ij
         return sse
 
     def _clust_obj(self, m):
@@ -285,7 +274,7 @@ class GridModel(pe.ConcreteModel):
             i, j = gid
             sse_ij = sum([(m.C[self.ts[t], i, j] - self.cdata[i, j, t])**2
                           for t in range(4, 40)])
-            sse += self.wmat[i,j] * (sse_ij - self.best_sse[i, j])
+            sse += self.wmat[i,j] * sse_ij
         return sse
 
     def solve_grids(self, solver=None, find_best=True, find_worst=False):
@@ -343,8 +332,8 @@ class GridModel(pe.ConcreteModel):
 
     def solve_overall_sse(self, presolved=False):
         # Minimize overall objective function (sum of SSE between model & data
-        # minus the best possible error for each grid) by varying all grid
-        # clearance parameters. See paper for mathematical details.
+        # for each grid) by varying all grid clearance parameters.
+        # See paper for mathematical details.
         if presolved is False:
             # activate constraints
             self.init_cond = pe.Constraint(self.i, self.j,
