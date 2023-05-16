@@ -5,7 +5,6 @@ from math import log
 import numpy as np
 import pyomo.dae as pdae
 import pyomo.environ as pe
-from scipy.io import loadmat
 
 
 def sflag(results):

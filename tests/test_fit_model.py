@@ -3,7 +3,6 @@ import sys
 from math import log
 
 import numpy as np
-from scipy.io import loadmat
 
 sys.path.append(os.path.abspath("../"))
 import psanalysis.grid_model as gm
