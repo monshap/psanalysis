@@ -57,7 +57,6 @@ if isinstance(load_grid_sse, str):
     all_grid_sse = np.load(load_grid_sse)["all_grid_sse"]
 
 for pat_num, pat_str in enumerate(sub_list):
-    eq = el < eq_thresh
     pat_clr = clr[..., pat_num]
     pat_conc = Tc_norm[..., pat_num]
     print(pat_str)
