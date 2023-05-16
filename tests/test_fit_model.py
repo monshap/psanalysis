@@ -28,10 +28,6 @@ el = np.load("Emap_16x8_diags_HRCT.npz")["arr_0"]
 eq_thresh = 4
 eq = el < eq_thresh
 out_lung = el == 0
-(bool_n, bool_ne, bool_e, bool_se,
- bool_s, bool_sw, bool_w, bool_nw) = gm.get_bool_maps(el, eq=eq)
-sum_leave = np.sum([bool_n, bool_ne, bool_e, bool_se, bool_s, bool_sw,
-                    bool_w, bool_nw], axis=0)
 
 # for reduced model:
 # n_clust = 5
