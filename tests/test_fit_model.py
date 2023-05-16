@@ -38,8 +38,7 @@ clmap_name = "full_model"
 
 clust = np.load(f"{clmap_name}_clust.npz")["arr_0"]
 clust = clust.astype("int32")
-nout = np.sum(out_lung)
-nin = ngrid - nout
+nK = np.max(clust)
 
 # save outputs to file (False or name of output file)
 save_params = f"{clmap_name}_params.npz"
@@ -66,7 +65,7 @@ for pat_num, pat_str in enumerate(sub_list):
 
     # solve overall objective fn - change to match run
     if isinstance(load_params, str):
-        for K in range(nclust):
+        for K in range(nK):
             pat_gm.k[K] = all_ks[K, pat_num]
     pat_gm.solve_overall_sse()
     grid_err = pat_gm.get_grid_sse()
