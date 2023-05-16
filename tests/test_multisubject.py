@@ -34,3 +34,5 @@ Tc_stack = np.clip(np.stack((all_aTc, all_pTc)), 0, None)
 In_stack = np.clip(np.stack((all_aIn, all_pIn)), 0, None)
 gm_Tc = gmean(Tc_stack, axis=0)
 gm_In = gmean(In_stack, axis=0)
+# Save results
+np.savez("MultiSub_Conc.npz", gm_Tc=gm_Tc, gm_In=gm_In)
