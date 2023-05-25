@@ -9,7 +9,8 @@ setup(
     packages=["psanalysis"],
     install_requires=[
         "numpy >= 1.22",
-        "scipy >= 1.8"
+        "scipy >= 1.8",
+        "pyomo >= 5.7"
     ],
     tests_require=["pytests"]
 )
