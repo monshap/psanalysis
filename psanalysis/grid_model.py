@@ -384,8 +384,8 @@ class GridModel(pe.ConcreteModel):
     def get_grid_sse(self):
         # Calculate error in each grid from optimized solution
         self.solved_error = np.zeros((self.ny, self.nx))
-        for i in range(ny):
-            for j in range(nx):
+        for i in range(self.ny):
+            for j in range(self.nx):
                 sse_ij = sum([(pe.value(self.C[self.ts[t], i, j])
                                - self.cdata[i, j, t])**2
                               for t in range(4, 40)])
