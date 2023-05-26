@@ -2,6 +2,7 @@ import os
 import sys
 
 import numpy as np
+import pyomo.environ as pe
 
 sys.path.append(os.path.abspath("../"))
 import psanalysis.grid_model as gm
