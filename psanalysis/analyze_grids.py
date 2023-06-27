@@ -99,12 +99,9 @@ class PlanarStudy(object):
                 print(f"Current (py, px): ({py}, {px})")
             return scan, py, px
 
-        def bgcorrect_tc(act, bg, nt, tc_only=tc_only):
+        def bgcorrect_tc(act, bg, nt):
             tc_raw = act[..., :nt]
-            if tc_only:
-                mid_raw = np.zeros_like(tc_raw)
-            else:
-                mid_raw = act[..., nt:2*nt]
+            mid_raw = act[..., nt:2*nt]
             tc_correct = tc_raw/2 - mid_raw*2.01/2 - bg[..., np.newaxis]/4
             return tc_correct
 
@@ -124,7 +121,7 @@ class PlanarStudy(object):
         ant_idx = [*range(1, nt+1), *range(2*nt+1, 3*nt+1),
                    *range(4*nt+1, 5*nt+1)]
         if tc_only:
-            ant_idx = ant_idx[:nt]
+            ant_idx = ant_idx[:2*nt]
         for i, idx in enumerate(ant_idx):
             fname = os.path.join(self.ant_dir, f"Tc_{idx}.txt")
             scan, py, px = _clip_scan(np.loadtxt(fname), py0, px0,
@@ -153,7 +150,7 @@ class PlanarStudy(object):
         post_idx = [*range(nt+1, 2*nt+1), *range(3*nt+1, 4*nt+1),
                     *range(5*nt+1, 6*nt+1)]
         if tc_only:
-            post_idx = post_idx[:nt]
+            post_idx = post_idx[:2*nt]
         for i, idx in enumerate(post_idx):
             fname = os.path.join(self.post_dir, f"Tc_{idx}.txt")
             scan, py, px = _clip_scan(np.loadtxt(fname), py0, px0,
