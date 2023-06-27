@@ -83,7 +83,7 @@ class PlanarStudy(object):
         self.ant_bg_dir = os.path.join(self.dir, "AntBgScans")
         self.post_bg_dir = os.path.join(self.dir, "BgScans")
 
-    def preprocess_scans(self, debug=False):
+    def preprocess_scans(self, debug=False, tc_only=False):
 
         def _clip_scan(scan, py0, px0, debug=False):
             py, px = np.shape(scan)
@@ -99,9 +99,12 @@ class PlanarStudy(object):
                 print(f"Current (py, px): ({py}, {px})")
             return scan, py, px
 
-        def bgcorrect_tc(act, bg, nt):
+        def bgcorrect_tc(act, bg, nt, tc_only=tc_only):
             tc_raw = act[..., :nt]
-            mid_raw = act[..., nt:2*nt]
+            if tc_only:
+                mid_raw = np.zeros_like(tc_raw)
+            else:
+                mid_raw = act[..., nt:2*nt]
             tc_correct = tc_raw/2 - mid_raw*2.01/2 - bg[..., np.newaxis]/4
             return tc_correct
 
@@ -120,6 +123,8 @@ class PlanarStudy(object):
         # Anterior indices for each energy window [Tc, Mid, In]
         ant_idx = [*range(1, nt+1), *range(2*nt+1, 3*nt+1),
                    *range(4*nt+1, 5*nt+1)]
+        if tc_only:
+            ant_idx = ant_idx[:nt]
         for i, idx in enumerate(ant_idx):
             fname = os.path.join(self.ant_dir, f"Tc_{idx}.txt")
             scan, py, px = _clip_scan(np.loadtxt(fname), py0, px0,
@@ -134,18 +139,21 @@ class PlanarStudy(object):
         ant_bgTc[:py, :px] = scan
         ant_bgTc = ant_bgTc*self.wlmask
         # Anterior background In-111 activity
-        ant_bgIn = np.zeros((py0, px0))
-        ant_bgIn_path = os.path.join(self.ant_bg_dir, "Bg_5.txt")
-        scan, py, px = _clip_scan(np.loadtxt(ant_bgIn_path), py0, px0,
-                                  debug=debug)
-        ant_bgIn[:py, :px] = scan
-        ant_bgIn = ant_bgIn*self.wlmask
+        if not tc_only:
+            ant_bgIn = np.zeros((py0, px0))
+            ant_bgIn_path = os.path.join(self.ant_bg_dir, "Bg_5.txt")
+            scan, py, px = _clip_scan(np.loadtxt(ant_bgIn_path), py0,
+                                      px0, debug=debug)
+            ant_bgIn[:py, :px] = scan
+            ant_bgIn = ant_bgIn*self.wlmask
 
         # Process posterior scans
         post_act = np.zeros((py0, px0, 3*nt))
         # Posterior indices for each energy window [Tc, Mid, In]
         post_idx = [*range(nt+1, 2*nt+1), *range(3*nt+1, 4*nt+1),
                     *range(5*nt+1, 6*nt+1)]
+        if tc_only:
+            post_idx = post_idx[:nt]
         for i, idx in enumerate(post_idx):
             fname = os.path.join(self.post_dir, f"Tc_{idx}.txt")
             scan, py, px = _clip_scan(np.loadtxt(fname), py0, px0,
@@ -160,18 +168,23 @@ class PlanarStudy(object):
         post_bgTc[:py, :px] = scan
         post_bgTc = post_bgTc*self.wlmask
         # Posterior background In-111 activity
-        post_bgIn = np.zeros((py0, px0))
-        post_bgIn_path = os.path.join(self.post_bg_dir, "Bg_6.txt")
-        scan, py, px = _clip_scan(np.loadtxt(post_bgIn_path), py0, px0,
-                                  debug=debug)
-        post_bgIn[:py, :px] = scan
-        post_bgIn = post_bgIn*self.wlmask
+        if not tc_only:
+            post_bgIn = np.zeros((py0, px0))
+            post_bgIn_path = os.path.join(self.post_bg_dir, "Bg_6.txt")
+            scan, py, px = _clip_scan(np.loadtxt(post_bgIn_path), py0,
+                                      px0, debug=debug)
+            post_bgIn[:py, :px] = scan
+            post_bgIn = post_bgIn*self.wlmask
 
         # Background correct anterior & posterior images
-        ant_Tc = bgcorrect_tc(ant_act, ant_bgTc, nt)
-        ant_In = bgcorrect_in(ant_act, ant_bgIn, nt)
-        post_Tc = bgcorrect_tc(post_act, post_bgTc, nt)
-        post_In = bgcorrect_in(post_act, post_bgIn, nt)
+        ant_Tc = bgcorrect_tc(ant_act, ant_bgTc, nt, tc_only=tc_only)
+        post_Tc = bgcorrect_tc(post_act, post_bgTc, nt, tc_only=tc_only)
+        if tc_only:
+            ant_In = np.zeros_like(ant_Tc)
+            post_In = np.zeros_like(post_Tc)
+        else:
+            ant_In = bgcorrect_in(ant_act, ant_bgIn, nt)
+            post_In = bgcorrect_in(post_act, post_bgIn, nt)
 
         # Assign attributes to activity matrices
         self.ant_Tc = ant_Tc
