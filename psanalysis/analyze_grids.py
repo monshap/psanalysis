@@ -174,8 +174,8 @@ class PlanarStudy(object):
             post_bgIn = post_bgIn*self.wlmask
 
         # Background correct anterior & posterior images
-        ant_Tc = bgcorrect_tc(ant_act, ant_bgTc, nt, tc_only=tc_only)
-        post_Tc = bgcorrect_tc(post_act, post_bgTc, nt, tc_only=tc_only)
+        ant_Tc = bgcorrect_tc(ant_act, ant_bgTc, nt)
+        post_Tc = bgcorrect_tc(post_act, post_bgTc, nt)
         if tc_only:
             ant_In = np.zeros_like(ant_Tc)
             post_In = np.zeros_like(post_Tc)
